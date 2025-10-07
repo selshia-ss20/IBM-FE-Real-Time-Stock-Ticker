@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Stock Market Sentiment Analyzer</title>
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2e0b3c6c2.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #eef2f3, #8e9eab);
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px;
+      background: #0f62fe;
+      color: white;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .time {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+      border: 2px solid #0f62fe;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #0039cb;
+      box-shadow: 0 0 5px #0039cb;
+    }
+
+    .summary {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      padding: 20px;
+      width: 330px;
+      margin: 0 auto 20px;
+      font-weight: 600;
+    }
+
+    .chart-container {
+      width: 400px;
+      margin: 0 auto 30px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .stock-card {
+      background: linear-gradient(to bottom right, #ffffff, #f8f9fb);
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 260px;
+      text-align: center;
+      padding: 20px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .stock-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+
+    .stock-name {
+      font-weight: 600;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #0f62fe;
+    }
+
+    .change {
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+
+    .sentiment {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 8px;
+      border-radius: 10px;
+      display: inline-block;
+      width: 120px;
+    }
+
+    .positive {
+      background: #d4f8e8;
+      color: #0b8a2f;
+    }
+
+    .negative {
+      background: #fde7e9;
+      color: #c1121f;
+    }
+
+    .neutral {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 0.9rem;
+      color: #555;
+      background: #f1f1f1;
+    }
+
+    @media (max-width: 600px) {
+      .stock-card { width: 90%; }
+      input { width: 90%; }
+      .chart-container { width: 90%; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    📈 Real-Time Stock Market Sentiment Analyzer
+    <div class="time" id="currentTime"></div>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="🔍 Search by stock name...">
+  </div>
+
+  <div class="summary" id="market-summary">
+    Overall Market Sentiment: <span id="overall-sentiment">Positive</span>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="sentimentChart"></canvas>
+  </div>
+
+  <div class="container" id="stocks">
+    <!-- Stock Cards with Data -->
+    <div class="stock-card" id="TCS">
+      <div class="stock-name">TCS</div>
+      <div class="price">₹3,865</div>
+      <div class="change">+1.25%</div>
+      <div class="sentiment positive">Positive</div>
+    </div>
+
+    <div class="stock-card" id="INFY">
+      <div class="stock-name">INFY</div>
+      <div class="price">₹1,565</div>
+      <div class="change">+0.75%</div>
+      <div class="sentiment positive">Positive</div>
+    </div>
+
+    <div class="stock-card" id="RELIANCE">
+      <div class="stock-name">RELIANCE</div>
+      <div class="price">₹2,785</div>
+      <div class="change">-0.42%</div>
+      <div class="sentiment neutral">Neutral</div>
+    </div>
+
+    <div class="stock-card" id="HDFC">
+      <div class="stock-name">HDFC</div>
+      <div class="price">₹1,712</div>
+      <div class="change">+0.32%</div>
+      <div class="sentiment positive">Positive</div>
+    </div>
+
+    <div class="stock-card" id="WIPRO">
+      <div class="stock-name">WIPRO</div>
+      <div class="price">₹466</div>
+      <div class="change">-0.18%</div>
+      <div class="sentiment neutral">Neutral</div>
+    </div>
+
+    <div class="stock-card" id="HCL">
+      <div class="stock-name">HCL</div>
+      <div class="price">₹1,421</div>
+      <div class="change">+0.89%</div>
+      <div class="sentiment positive">Positive</div>
+    </div>
+
+    <div class="stock-card" id="ICICI">
+      <div class="stock-name">ICICI</div>
+      <div class="price">₹992</div>
+      <div class="change">-1.12%</div>
+      <div class="sentiment negative">Negative</div>
+    </div>
+
+    <div class="stock-card" id="SBIN">
+      <div class="stock-name">SBIN</div>
+      <div class="price">₹682</div>
+      <div class="change">+0.58%</div>
+      <div class="sentiment positive">Positive</div>
+    </div>
+  </div>
+
+  <footer>© 2025 Nan Mudhalvan | IBM-FE Project</footer>
+
+  <script>
+    // Sentiment Chart Setup
+    const ctx = document.getElementById('sentimentChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive', 'Negative', 'Neutral'],
+        datasets: [{
+          label: 'Sentiment Distribution',
+          data: [5, 1, 2], // 5 positive, 1 negative, 2 neutral
+          backgroundColor: ['#4caf50', '#f44336', '#ffeb3b'],
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' },
+          title: { display: true, text: 'Market Sentiment Overview' }
+        }
+      }
+    });
+
+    // Live Time
+    function updateTime() {
+      const now = new Date();
+      document.getElementById("currentTime").innerText = now.toLocaleString();
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Search Filter
+    document.getElementById("search").addEventListener("input", e => {
+      const value = e.target.value.toUpperCase();
+      document.querySelectorAll(".stock-card").forEach(card => {
+        card.style.display = card.id.includes(value) ? "block" : "none";
+      });
+    });
+  </script>
+</body>
+</html>
